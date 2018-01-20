@@ -3,14 +3,13 @@
 
 import calendar
 import time
-from Tkinter import Tk
-from tkFileDialog import askopenfilename
+from Tkinter import *
+import tkFileDialog
 
 from lxml import etree
 import re
 import xlsxwriter
 import os
-
 
 # params
 font = 'Arial narrow'
@@ -24,15 +23,44 @@ a_width = 11.25
 b_width = 14.45
 c_width = 14.45
 row_height = 11.9
-symbols = ['DW', 'FS', 'FZ', 'KP', 'KW', 'FSE', 'Rach', 'Rach.', 'FZP', 'K', 'N', 'Z', 'RK', 'R', 'na']
+symbols = []
 rows_per_page = 68
+
+# vars
+file_name = None
+main_window, top, bottom = None, None, None
+decrees = []
 
 
 def main():
-    Tk().withdraw()
-    source = askopenfilename()
+    global main_window, top, bottom
+    main_window = Tk()
+    main_window.winfo_toplevel().title('Dekrety')
+
+    top = Frame(main_window)
+    top.pack(side=TOP, fill=X)
+    bottom = Frame(main_window)
+    bottom.pack(side=LEFT, fill=X)
+
+    Label(top, width=2).pack(side=LEFT)
+
+    Button(top, height=1, text='Wybierz plik: ', command=lambda: process_file(file_label)).pack(side=LEFT)
+    Label(top, width=2).pack(side=LEFT)
+    file_label = Label(top, height=2)
+    file_label.pack(side=LEFT)
+    Label(top, width=2).pack(side=LEFT)
+
+    main_window.mainloop()
+
+
+def process_file(file_label):
+    global file_name, decrees
+    decrees = []
+    file_name = tkFileDialog.askopenfilename(filetypes=[('Plik xml', '*.xml')], title='Wybierz plik')
+    print(file_name)
+    file_label.config(text=file_name)
     fix = 'fix.xml'
-    fix_file(source, fix)
+    fix_file(file_name, fix)
 
     doc = etree.parse(fix)
     root = doc.getroot()
@@ -40,20 +68,36 @@ def main():
     date = get_date(document)
     month = date[0]
     year = date[1]
-    decrees = []
     for table in document:
         if table.tag == 'table':
             decree = parse_table(table, month, year)
             if decree is not None:
                 decrees.append(decree)
     os.remove(fix)
+    show_symbols_and_convert_button()
 
+
+def show_symbols_and_convert_button():
+    convert_button = Button(top, height=1, text='Konwertuj plik ', command=lambda: convert_file())
+    convert_button.pack(side=LEFT)
+    Label(top, width=2).pack(side=LEFT)
+    Label(bottom, width=2).pack(side=LEFT)
+    symbols_label = Label(bottom, text='Symbole:')
+    symbols_label.pack(side=LEFT)
+    for symbol in symbols:
+        check = Checkbutton(bottom, text=symbol[0], variable=symbol[1], height=2, command=lambda: check)
+        check.pack(side=LEFT)
+        check.select()
+    Label(bottom, width=2).pack(side=LEFT)
+
+
+def convert_file():
     workbook = xlsxwriter.Workbook('dekret_' + str(calendar.timegm(time.gmtime())) + '.xlsx')
     workbook.formats[0].set_font_size(size)
     workbook.formats[0].set_font(font)
 
-    money_formatting = get_money_formatting(workbook, font, size)
-    formatting = get_formatting(workbook, font, size)
+    money_formatting = get_money_formatting(workbook)
+    formatting = get_formatting(workbook)
 
     columns = [['A', 'B', 'C'], ['E', 'F', 'G'], ['I', 'J', 'K']]
     start = 1
@@ -73,7 +117,7 @@ def main():
     worksheet.set_column('K:K', c_width)
     max_rows_from_three_operations = 0
     page_breaks = [0]
-    for idx, decree in enumerate(decrees):
+    for idx, decree in enumerate(filter_decrees()):
         if idx != 0 and idx % 3 == 0:
             start = start + rows_per_page / 4 * ((max_rows_from_three_operations + 3) / (rows_per_page / 4 - 1) + 1)
             max_rows_from_three_operations = 0
@@ -87,6 +131,15 @@ def main():
         write_decree(worksheet, decree, start, columns[idx % 3], formatting, money_formatting)
     worksheet.set_h_pagebreaks(page_breaks)
     workbook.close()
+    main_window.destroy()
+
+
+def filter_decrees():
+    filtered_decrees = []
+    for decree in decrees:
+        if dict(symbols).get(decree['symbol']).get():
+            filtered_decrees.append(decree)
+    return filtered_decrees
 
 
 def write_decree(worksheet, decree, start, columns, formatting, money_formatting):
@@ -103,7 +156,7 @@ def write_decree(worksheet, decree, start, columns, formatting, money_formatting
         worksheet.write(columns[2] + str(start + 3 + idx), get_currency_value(row['ma']), money_formatting)
 
 
-def get_formatting(workbook, font, size):
+def get_formatting(workbook):
     formatting = workbook.add_format()
     formatting.set_border()
     formatting.set_font(font)
@@ -112,7 +165,7 @@ def get_formatting(workbook, font, size):
     return formatting
 
 
-def get_money_formatting(workbook, font, size):
+def get_money_formatting(workbook):
     formatting = workbook.add_format(
         {'num_format': '_-* #,##0.00 "zł"_-;-* #,##0.00 "zł"_-;_-* "-"?? "zł"_-;_-@_-'.decode('utf-8')})
     formatting.set_border()
@@ -130,12 +183,13 @@ def get_currency_value(raw_number):
 
 
 def parse_table(table, month, year):
-    decree = {'date': None, 'number': None, 'rows': []}
-
+    decree = {'symbol': None, 'date': None, 'number': None, 'rows': []}
+    if int(table.attrib['cols']) == 5:
+        parse_summary_table(table)
+    if int(table.attrib['cols']) != 10:
+        return None
     for idx, row in enumerate(table):
         if row.tag == 'row':
-            if idx == 0 and len(row) != 10:
-                return None  # incorrect table
             if row[0][0].text == 'Lp.' or idx >= len(table) - 1:  # skip header and last row
                 continue
             if decree['date'] is None:
@@ -144,9 +198,17 @@ def parse_table(table, month, year):
                 decree['number'] = row[2][0].text
             decree_row = {'account': row[7][0].text, 'wn': row[8][0].text, 'ma': row[9][0].text}
             decree['rows'].append(decree_row)
-            if row[5][0].text not in symbols:
-                return None
+            if decree['symbol'] is None:
+                decree['symbol'] = row[5][0].text
     return decree
+
+
+def parse_summary_table(table):
+    for idx, row in enumerate(table):
+        if row.tag == 'row':
+            if idx < 2 or idx >= len(table) - 1:  # skip irrelevant rows
+                continue
+            symbols.append((row[1][0].text, BooleanVar()))
 
 
 def fix_file(file1, file2):
