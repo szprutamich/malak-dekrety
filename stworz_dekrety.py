@@ -44,7 +44,9 @@ def main():
 
     Label(top, width=2).pack(side=LEFT)
 
-    Button(top, height=1, text='Wybierz plik: ', command=lambda: process_file(file_label)).pack(side=LEFT)
+    choose_button = Button(top, height=1, text='Wybierz plik: ')
+    choose_button.configure(command=lambda: process_file(file_label, choose_button))
+    choose_button.pack(side=LEFT)
     Label(top, width=2).pack(side=LEFT)
     file_label = Label(top, height=2)
     file_label.pack(side=LEFT)
@@ -53,7 +55,8 @@ def main():
     main_window.mainloop()
 
 
-def process_file(file_label):
+def process_file(file_label, choose_button):
+    choose_button.configure(state=DISABLED)
     global file_name, decrees
     decrees = []
     file_name = tkFileDialog.askopenfilename(filetypes=[('Plik xml', '*.xml')], title='Wybierz plik')
