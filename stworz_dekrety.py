@@ -6,6 +6,7 @@ import time
 from Tkinter import *
 import tkFileDialog
 
+from datetime import datetime
 from lxml import etree
 import re
 import xlsxwriter
@@ -23,24 +24,31 @@ a_width = 11.25
 b_width = 14.45
 c_width = 14.45
 row_height = 13.9
-symbols = []
+excluded_symbols = ['PK', 'WB']
 rows_per_page = 68
 
 # vars
 file_name = None
-main_window, top, bottom = None, None, None
+main_window, top, center, bottom = None, None, None, None
 decrees = []
+symbols = []
+min_date = None
+max_date = None
+input_min = None
+input_max = None
 
 
 def main():
-    global main_window, top, bottom
+    global main_window, top, center, bottom
     main_window = Tk()
     main_window.winfo_toplevel().title('Dekrety')
 
     top = Frame(main_window)
     top.pack(side=TOP, fill=X)
+    center = Frame(main_window)
+    center.pack(side=TOP, fill=X)
     bottom = Frame(main_window)
-    bottom.pack(side=LEFT, fill=X)
+    bottom.pack(side=BOTTOM, fill=X)
 
     Label(top, width=2).pack(side=LEFT)
 
@@ -77,20 +85,36 @@ def process_file(file_label, choose_button):
             if decree is not None:
                 decrees.append(decree)
     os.remove(fix)
-    show_symbols_and_convert_button()
+    show_rest_of_the_controls()
 
 
-def show_symbols_and_convert_button():
+def show_rest_of_the_controls():
+    global input_min, input_max
     convert_button = Button(top, height=1, text='Konwertuj plik ', command=lambda: convert_file())
     convert_button.pack(side=LEFT)
     Label(top, width=2).pack(side=LEFT)
-    Label(bottom, width=2).pack(side=LEFT)
-    symbols_label = Label(bottom, text='Symbole:')
+    Label(center, width=2).pack(side=LEFT)
+    symbols_label = Label(center, text='Symbole:')
     symbols_label.pack(side=LEFT)
     for symbol in symbols:
-        check = Checkbutton(bottom, text=symbol[0], variable=symbol[1], height=2, command=lambda: check)
+        check = Checkbutton(center, text=symbol[0], variable=symbol[1], height=2, command=lambda: check)
         check.pack(side=LEFT)
-        check.select()
+        if symbol[0] not in excluded_symbols:
+            check.select()
+    Label(center, width=2).pack(side=LEFT)
+
+    Label(bottom, width=2).pack(side=LEFT)
+    Label(bottom, text='Od:', height=2).pack(side=LEFT)
+    Label(bottom, width=2).pack(side=LEFT)
+    input_min = Entry(bottom)
+    input_min.insert(0, min_date.strftime("%Y-%m-%d"))
+    input_min.pack(side=LEFT)
+    Label(bottom, width=2).pack(side=LEFT)
+    Label(bottom, text='Do:', height=2).pack(side=LEFT)
+    Label(bottom, width=2).pack(side=LEFT)
+    input_max = Entry(bottom)
+    input_max.insert(0, max_date.strftime("%Y-%m-%d"))
+    input_max.pack(side=LEFT)
     Label(bottom, width=2).pack(side=LEFT)
 
 
@@ -141,8 +165,12 @@ def convert_file():
 
 def filter_decrees():
     filtered_decrees = []
+    final_min_date = parse_date(input_min.get())
+    final_max_date = parse_date(input_max.get())
+    dict_symbols = dict(symbols)
     for decree in decrees:
-        if dict(symbols).get(decree['symbol']).get():
+        decree_date = parse_date(decree['date'])
+        if dict_symbols.get(decree['symbol']).get() and final_min_date <= decree_date <= final_max_date:
             filtered_decrees.append(decree)
     return filtered_decrees
 
@@ -199,6 +227,7 @@ def parse_table(table, month, year):
                 continue
             if decree['date'] is None:
                 decree['date'] = year + '-' + month + '-' + row[1][0].text.split('.')[0]
+                update_min_max_date(decree['date'])
             if decree['number'] is None:
                 decree['number'] = row[2][0].text
             decree_row = {'account': row[7][0].text, 'wn': row[8][0].text, 'ma': row[9][0].text}
@@ -214,6 +243,19 @@ def parse_summary_table(table):
             if idx < 2 or idx >= len(table) - 1:  # skip irrelevant rows
                 continue
             symbols.append((row[1][0].text, BooleanVar()))
+
+
+def update_min_max_date(date):
+    global min_date, max_date
+    dt = parse_date(date)
+    if min_date is None or min_date > dt:
+        min_date = dt
+    if max_date is None or max_date < dt:
+        max_date = dt
+
+
+def parse_date(date):
+    return datetime.strptime(date, "%Y-%m-%d")
 
 
 def fix_file(file1, file2):
