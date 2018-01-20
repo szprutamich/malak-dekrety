@@ -107,13 +107,13 @@ def show_rest_of_the_controls():
     Label(bottom, text='Od:', height=2).pack(side=LEFT)
     Label(bottom, width=2).pack(side=LEFT)
     input_min = Entry(bottom)
-    input_min.insert(0, min_date.strftime("%Y-%m-%d"))
+    input_min.insert(0, min_date.strftime("%d.%m.%Y"))
     input_min.pack(side=LEFT)
     Label(bottom, width=2).pack(side=LEFT)
     Label(bottom, text='Do:', height=2).pack(side=LEFT)
     Label(bottom, width=2).pack(side=LEFT)
     input_max = Entry(bottom)
-    input_max.insert(0, max_date.strftime("%Y-%m-%d"))
+    input_max.insert(0, max_date.strftime("%d.%m.%Y"))
     input_max.pack(side=LEFT)
     Label(bottom, width=2).pack(side=LEFT)
 
@@ -169,8 +169,8 @@ def filter_decrees():
     final_max_date = parse_date(input_max.get())
     dict_symbols = dict(symbols)
     for decree in decrees:
-        decree_date = parse_date(decree['date'])
-        if dict_symbols.get(decree['symbol']).get() and final_min_date <= decree_date <= final_max_date:
+        input_date = parse_date(decree['input_date'])
+        if dict_symbols.get(decree['symbol']).get() and final_min_date <= input_date <= final_max_date:
             filtered_decrees.append(decree)
     return filtered_decrees
 
@@ -216,7 +216,7 @@ def get_currency_value(raw_number):
 
 
 def parse_table(table, month, year):
-    decree = {'symbol': None, 'date': None, 'number': None, 'rows': []}
+    decree = {'symbol': None, 'date': None, 'input_date': None, 'number': None, 'rows': []}
     if int(table.attrib['cols']) == 5:
         parse_summary_table(table)
     if int(table.attrib['cols']) != 10:
@@ -227,7 +227,9 @@ def parse_table(table, month, year):
                 continue
             if decree['date'] is None:
                 decree['date'] = year + '-' + month + '-' + row[1][0].text.split('.')[0]
-                update_min_max_date(decree['date'])
+            if decree['input_date'] is None or decree['input_date'] == '':
+                decree['input_date'] = row[3][0].text.strip()
+                update_min_max_date(decree['input_date'])
             if decree['number'] is None:
                 decree['number'] = row[2][0].text
             decree_row = {'account': row[7][0].text, 'wn': row[8][0].text, 'ma': row[9][0].text}
@@ -248,6 +250,8 @@ def parse_summary_table(table):
 def update_min_max_date(date):
     global min_date, max_date
     dt = parse_date(date)
+    if dt is None:
+        return
     if min_date is None or min_date > dt:
         min_date = dt
     if max_date is None or max_date < dt:
@@ -255,7 +259,10 @@ def update_min_max_date(date):
 
 
 def parse_date(date):
-    return datetime.strptime(date, "%Y-%m-%d")
+    try:
+        return datetime.strptime(date, '%d.%m.%Y')
+    except ValueError:
+        return None
 
 
 def fix_file(file1, file2):
