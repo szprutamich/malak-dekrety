@@ -18,11 +18,11 @@ margin_width = 4.5
 page_left_margin = 0.2
 page_right_margin = 0.2
 page_top_margin = 0.2
-page_bottom_margin = 0.2
+page_bottom_margin = 0.1
 a_width = 11.25
 b_width = 14.45
 c_width = 14.45
-row_height = 11.9
+row_height = 13.9
 symbols = []
 rows_per_page = 68
 
@@ -120,6 +120,8 @@ def convert_file():
     for idx, decree in enumerate(filter_decrees()):
         if idx != 0 and idx % 3 == 0:
             start = start + rows_per_page / 4 * ((max_rows_from_three_operations + 3) / (rows_per_page / 4 - 1) + 1)
+            if (start - page_breaks[-1]) > rows_per_page / 2:
+                start = start + 1
             max_rows_from_three_operations = 0
         max_rows_from_three_operations = max(len(decree['rows']), max_rows_from_three_operations)
         if (start - page_breaks[-1]) / rows_per_page != (
