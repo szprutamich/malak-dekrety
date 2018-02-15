@@ -269,7 +269,7 @@ def fix_file(file1, file2):
     f1 = open(file1, 'r')
     f2 = open(file2, 'w')
     for line in f1:
-        f2.write(line.replace('&d', '').replace('&t', '').replace('&p', '').replace('&P', ''))
+        f2.write(re.sub(r"&#?[a-zA-Z\d]*;?", "", line))
     f1.close()
     f2.close()
 
