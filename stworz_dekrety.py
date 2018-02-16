@@ -170,7 +170,7 @@ def filter_decrees():
     dict_symbols = dict(symbols)
     for decree in decrees:
         input_date = parse_date(decree['input_date'])
-        if dict_symbols.get(decree['symbol']).get() and final_min_date <= input_date <= final_max_date:
+        if dict_symbols.get(decree['symbol'].upper()).get() and final_min_date <= input_date <= final_max_date:
             filtered_decrees.append(decree)
     return filtered_decrees
 
@@ -235,7 +235,7 @@ def parse_table(table, month, year):
             decree_row = {'account': row[7][0].text, 'wn': row[8][0].text, 'ma': row[9][0].text}
             decree['rows'].append(decree_row)
             if decree['symbol'] is None:
-                decree['symbol'] = row[5][0].text
+                decree['symbol'] = row[5][0].text.upper()
     return decree
 
 
@@ -244,7 +244,7 @@ def parse_summary_table(table):
         if row.tag == 'row':
             if idx < 2 or idx >= len(table) - 1:  # skip irrelevant rows
                 continue
-            symbols.append((row[1][0].text, BooleanVar()))
+            symbols.append((row[1][0].text.upper(), BooleanVar()))
 
 
 def update_min_max_date(date):
