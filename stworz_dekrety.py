@@ -235,7 +235,10 @@ def parse_table(table, month, year):
             decree_row = {'account': row[7][0].text, 'wn': row[8][0].text, 'ma': row[9][0].text}
             decree['rows'].append(decree_row)
             if decree['symbol'] is None:
-                decree['symbol'] = row[5][0].text.upper()
+                if row[5][0].text is not None:
+                    decree['symbol'] = row[5][0].text.upper()
+                else:
+                    decree['symbol'] = ""
     return decree
 
 
@@ -244,7 +247,10 @@ def parse_summary_table(table):
         if row.tag == 'row':
             if idx < 2 or idx >= len(table) - 1:  # skip irrelevant rows
                 continue
-            symbols.append((row[1][0].text.upper(), BooleanVar()))
+            if row[1][0].text is not None:
+                symbols.append((row[1][0].text.upper(), BooleanVar()))
+            else:
+                symbols.append(("", BooleanVar()))
 
 
 def update_min_max_date(date):
