@@ -5,6 +5,8 @@ import calendar
 import time
 from Tkinter import *
 import tkFileDialog
+from tkinter.messagebox import showinfo
+
 
 from datetime import datetime
 from lxml import etree
@@ -144,7 +146,9 @@ def convert_file():
     worksheet.set_column('K:K', c_width)
     max_rows_from_three_operations = 0
     page_breaks = [0]
-    for idx, decree in enumerate(filter_decrees()):
+    filtered = filter_decrees()
+    verfiy_decrees(filtered)
+    for idx, decree in enumerate(filtered):
         if idx != 0 and idx % 3 == 0:
             start = start + rows_per_page / 4 * ((max_rows_from_three_operations + 3) / (rows_per_page / 4 - 1) + 1)
             if (start - page_breaks[-1]) > rows_per_page / 2:
@@ -173,6 +177,30 @@ def filter_decrees():
         if dict_symbols.get(decree['symbol'].upper()).get() and final_min_date <= input_date <= final_max_date:
             filtered_decrees.append(decree)
     return filtered_decrees
+
+
+def verfiy_decrees(decrees):
+    wrong_decrees = []
+    for decree in decrees:
+        sumWn4X = 0
+        sumMa4X = 0
+        wn490 = 0
+        ma490 = 0
+        if any(r['account'] is not None and r['account'].startswith('5') for r in decree['rows']):
+            for r in decree['rows']:
+                if r['account'] is not None:
+                    if r['account'] == '490':
+                        wn490 = float(r['wn'].replace(',', '.'))
+                        ma490 = float(r['ma'].replace(',', '.'))
+                    elif r['account'].startswith('4'):
+                        sumWn4X += float(r['wn'].replace(',', '.'))
+                        sumMa4X += float(r['ma'].replace(',', '.'))
+        if sumMa4X != wn490 or sumWn4X != ma490:
+            wrong_decrees.append(decree['number'])
+    if len(wrong_decrees) > 0:
+        showinfo('Dekrety', 'Dekrety ktore mają złe wartości dla kont 4XX: ' + str(wrong_decrees))
+    else:
+        showinfo('Dekrety', 'Wszystkie dekrety mają poprawne wartości dla kont 4XX')
 
 
 def write_decree(worksheet, decree, start, columns, formatting, money_formatting):
