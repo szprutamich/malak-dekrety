@@ -5,7 +5,7 @@ import calendar
 import time
 from Tkinter import *
 import tkFileDialog
-from tkinter.messagebox import showinfo
+from tkMessageBox import showinfo
 
 
 from datetime import datetime
