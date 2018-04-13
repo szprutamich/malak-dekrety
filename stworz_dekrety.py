@@ -38,6 +38,7 @@ min_date = None
 max_date = None
 input_min = None
 input_max = None
+epsilon = 0.0001
 
 
 def main():
@@ -200,7 +201,7 @@ def verify_decrees(decrees):
                     elif r['account'].startswith('4'):
                         sumWn4X += float(r['wn'].replace(',', '.'))
                         sumMa4X += float(r['ma'].replace(',', '.'))
-            if sumMa4X != wn490 or sumWn4X != ma490:
+            if abs(sumMa4X - wn490) > epsilon or abs(sumWn4X - ma490) > epsilon:
                 wrong_decrees.append(decree['number'])
         if len(wrong_decrees) > 0:
             showinfo('Dekrety', 'Dekrety które mają złe wartości dla kont 4XX: ' + str(wrong_decrees))
