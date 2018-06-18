@@ -147,8 +147,8 @@ def convert_file():
     worksheet.set_column('K:K', c_width)
     max_rows_from_three_operations = 0
     page_breaks = [0]
+    verify_decrees()
     filtered = filter_decrees()
-    verify_decrees(filtered)
     for idx, decree in enumerate(filtered):
         if idx != 0 and idx % 3 == 0:
             start = start + rows_per_page / 4 * ((max_rows_from_three_operations + 3) / (rows_per_page / 4 - 1) + 1)
@@ -180,8 +180,12 @@ def filter_decrees():
     return filtered_decrees
 
 
-def verify_decrees(decrees):
-    wrong_decrees = []
+#sum Wn5XX + sum Wn6YY = Ma490 + sum Ma6YY
+#sum Ma4XX = Wn490
+#sum Wn4XX = Ma490
+def verify_decrees():
+    wrong_decrees4XX = []
+    wrong_decress5and6XX = []
     should_verify = False
     for d in decrees:
         if any(r['account'] is not None and r['account'].startswith('5') for r in d['rows']):
@@ -191,6 +195,9 @@ def verify_decrees(decrees):
         for decree in decrees:
             sumWn4X = 0
             sumMa4X = 0
+            sumWn5X = 0
+            sumWn6X = 0
+            sumMa6X = 0
             wn490 = 0
             ma490 = 0
             for r in decree['rows']:
@@ -201,12 +208,24 @@ def verify_decrees(decrees):
                     elif r['account'].startswith('4'):
                         sumWn4X += float(r['wn'].replace(',', '.'))
                         sumMa4X += float(r['ma'].replace(',', '.'))
+                    elif r['account'].startswith('5'):
+                        sumWn5X += float(r['wn'].replace(',', '.'))
+                    elif r['account'].startswith('6'):
+                        sumWn6X += float(r['wn'].replace(',', '.'))
+                        sumMa6X += float(r['ma'].replace(',', '.'))
             if abs(sumMa4X - wn490) > epsilon or abs(sumWn4X - ma490) > epsilon:
-                wrong_decrees.append(decree['number'])
-        if len(wrong_decrees) > 0:
-            showinfo('Dekrety', 'Dekrety które mają złe wartości dla kont 4XX: ' + str(wrong_decrees))
+                wrong_decrees4XX.append(decree['number'])
+            if abs(sumWn5X + sumWn6X - ma490 - sumMa6X) > epsilon:
+                wrong_decress5and6XX.append(decree['number'])
+        if len(wrong_decrees4XX) > 0 and len(wrong_decress5and6XX) > 0:
+            showinfo('Dekrety', 'Dekrety które mają złe wartości dla kont 4XX: ' + str(wrong_decrees4XX)
+                     + '\nDekrety które mają zle wartości dla kont 5XX lub 6XX: ' + str(wrong_decress5and6XX))
+        elif len(wrong_decrees4XX) > 0:
+            showinfo('Dekrety', 'Dekrety które mają złe wartości dla kont 4XX: ' + str(wrong_decrees4XX))
+        elif len(wrong_decress5and6XX) > 0:
+            showinfo('Dekrety które mają zle wartości dla kont 5XX lub 6XX: ' + str(wrong_decress5and6XX))
         else:
-            showinfo('Dekrety', 'Wszystkie dekrety mają poprawne wartości dla kont 4XX')
+            showinfo('Dekrety', 'Wszystkie dekrety mają poprawne wartości')
     else:
         showinfo('Dekrety', 'Nie ma żadnego konta 5XX, pomijam weryfikację')
 
