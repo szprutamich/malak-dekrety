@@ -223,7 +223,7 @@ def verify_decrees():
         elif len(wrong_decrees4XX) > 0:
             showinfo('Dekrety', 'Dekrety które mają złe wartości dla kont 4XX: ' + str(wrong_decrees4XX))
         elif len(wrong_decress5and6XX) > 0:
-            showinfo('Dekrety które mają zle wartości dla kont 5XX lub 6XX: ' + str(wrong_decress5and6XX))
+            showinfo('Dekrety', 'Dekrety które mają zle wartości dla kont 5XX lub 6XX: ' + str(wrong_decress5and6XX))
         else:
             showinfo('Dekrety', 'Wszystkie dekrety mają poprawne wartości')
     else:
