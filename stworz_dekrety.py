@@ -3,9 +3,9 @@
 
 import calendar
 import time
-from Tkinter import *
-import tkFileDialog
-from tkMessageBox import showinfo
+from tkinter import *
+from tkinter import filedialog
+from tkinter.messagebox import showinfo
 
 
 from datetime import datetime
@@ -70,7 +70,7 @@ def process_file(file_label, choose_button):
     choose_button.configure(state=DISABLED)
     global file_name, decrees
     decrees = []
-    file_name = tkFileDialog.askopenfilename(filetypes=[('Plik xml', '*.xml')], title='Wybierz plik')
+    file_name = filedialog.askopenfilename(filetypes=[('Plik xml', '*.xml')], title='Wybierz plik')
     print(file_name)
     file_label.config(text=file_name)
     fix = 'fix.xml'
@@ -255,7 +255,7 @@ def get_formatting(workbook):
 
 def get_money_formatting(workbook):
     formatting = workbook.add_format(
-        {'num_format': '_-* #,##0.00 "zł"_-;-* #,##0.00 "zł"_-;_-* "-"?? "zł"_-;_-@_-'.decode('utf-8')})
+        {'num_format': '_-* #,##0.00 "zł"_-;-* #,##0.00 "zł"_-;_-* "-"?? "zł"_-;_-@_-'})
     formatting.set_border()
     formatting.set_font(font)
     formatting.set_align('center')
