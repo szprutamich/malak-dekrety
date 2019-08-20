@@ -255,7 +255,7 @@ def get_formatting(workbook):
 
 def get_money_formatting(workbook):
     formatting = workbook.add_format(
-        {'num_format': '_-* #,##0.00 "zł"_-;-* #,##0.00 "zł"_-;_-* "-"?? "zł"_-;_-@_-'.decode('utf-8')})
+        {'num_format': '_-* #,##0.00 "zł"_-;-* #,##0.00 "zł"_-;_-* "-"?? "zł"_-;_-@_-'})
     formatting.set_border()
     formatting.set_font(font)
     formatting.set_align('center')
