@@ -3,9 +3,9 @@
 
 import calendar
 import time
-from Tkinter import *
-import tkFileDialog
-from tkMessageBox import showinfo
+from tkinter import *
+from tkinter import filedialog
+from tkinter.messagebox import showinfo
 
 
 from datetime import datetime
@@ -70,7 +70,7 @@ def process_file(file_label, choose_button):
     choose_button.configure(state=DISABLED)
     global file_name, decrees
     decrees = []
-    file_name = tkFileDialog.askopenfilename(filetypes=[('Plik xml', '*.xml')], title='Wybierz plik')
+    file_name = filedialog.askopenfilename(filetypes=[('Plik xml', '*.xml')], title='Wybierz plik')
     print(file_name)
     file_label.config(text=file_name)
     fix = 'fix.xml'
