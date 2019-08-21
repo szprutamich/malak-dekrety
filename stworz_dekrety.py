@@ -151,12 +151,12 @@ def convert_file():
     filtered = filter_decrees()
     for idx, decree in enumerate(filtered):
         if idx != 0 and idx % 3 == 0:
-            start = start + rows_per_page / 4 * ((max_rows_from_three_operations + 3) / (rows_per_page / 4 - 1) + 1)
-            if (start - page_breaks[-1]) > rows_per_page / 2:
+            start = start + rows_per_page // 4 * ((max_rows_from_three_operations + 3) // (rows_per_page // 4 - 1) + 1)
+            if (start - page_breaks[-1]) > rows_per_page // 2:
                 start = start + 1
             max_rows_from_three_operations = 0
         max_rows_from_three_operations = max(len(decree['rows']), max_rows_from_three_operations)
-        if (start - page_breaks[-1]) / rows_per_page != (
+        if (start - page_breaks[-1]) // rows_per_page != (
                 start - page_breaks[-1] + len(decree['rows']) + 1) / rows_per_page:
             page_breaks.append(start - 1)
         if start - page_breaks[-1] > rows_per_page:  # adjust start to page start
