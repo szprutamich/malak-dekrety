@@ -157,7 +157,7 @@ def convert_file():
             max_rows_from_three_operations = 0
         max_rows_from_three_operations = max(len(decree['rows']), max_rows_from_three_operations)
         if (start - page_breaks[-1]) // rows_per_page != (
-                start - page_breaks[-1] + len(decree['rows']) + 1) / rows_per_page:
+                start - page_breaks[-1] + len(decree['rows']) + 1) // rows_per_page:
             page_breaks.append(start - 1)
         if start - page_breaks[-1] > rows_per_page:  # adjust start to page start
             start = page_breaks[-1] + rows_per_page + 1
