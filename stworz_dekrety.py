@@ -162,7 +162,7 @@ def convert_file():
         if start - page_breaks[-1] > rows_per_page:  # adjust start to page start
             start = page_breaks[-1] + rows_per_page + 1
             page_breaks.append(start - 1)
-        write_decree(worksheet, decree, start, columns[idx % 3], formatting, money_formatting)
+        write_decree(worksheet, decree, start, columns[idx % 3], idx, formatting, money_formatting)
     worksheet.set_h_pagebreaks(page_breaks)
     workbook.close()
     main_window.destroy()
@@ -230,9 +230,10 @@ def verify_decrees():
         showinfo('Dekrety', 'Nie ma żadnego konta 5XX, pomijam weryfikację')
 
 
-def write_decree(worksheet, decree, start, columns, formatting, money_formatting):
+def write_decree(worksheet, decree, start, columns, idx, formatting, money_formatting):
     worksheet.write(columns[0] + str(start), 'Data:', formatting)
-    worksheet.merge_range(columns[1] + str(start) + ':' + columns[2] + str(start), decree['date'], formatting)
+    worksheet.write(columns[1] + str(start), decree['date'], formatting)
+    worksheet.write(columns[2] + str(start), 'Lp - ' + str(idx + 1), formatting)
     worksheet.write(columns[0] + str(start + 1), 'Nr dowodu', formatting)
     worksheet.merge_range(columns[1] + str(start + 1) + ':' + columns[2] + str(start + 1), decree['number'], formatting)
     worksheet.write(columns[0] + str(start + 2), 'Konto', formatting)
@@ -327,7 +328,7 @@ def parse_date(date):
 
 
 def fix_file(file1, file2):
-    f1 = open(file1, 'r')
+    f1 = open(file1, 'r', encoding="windows-1250")
     f2 = open(file2, 'w')
     for line in f1:
         f2.write(re.sub(r"&#?[a-zA-Z\d]*;?", "", line))
