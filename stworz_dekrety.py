@@ -162,7 +162,7 @@ def convert_file():
         if start - page_breaks[-1] > rows_per_page:  # adjust start to page start
             start = page_breaks[-1] + rows_per_page + 1
             page_breaks.append(start - 1)
-        write_decree(worksheet, decree, start, columns[idx % 3], idx, formatting, money_formatting)
+        write_decree(worksheet, decree, start, columns[idx % 3], formatting, money_formatting)
     worksheet.set_h_pagebreaks(page_breaks)
     workbook.close()
     main_window.destroy()
@@ -230,10 +230,10 @@ def verify_decrees():
         showinfo('Dekrety', 'Nie ma żadnego konta 5XX, pomijam weryfikację')
 
 
-def write_decree(worksheet, decree, start, columns, idx, formatting, money_formatting):
+def write_decree(worksheet, decree, start, columns, formatting, money_formatting):
     worksheet.write(columns[0] + str(start), 'Data:', formatting)
     worksheet.write(columns[1] + str(start), decree['date'], formatting)
-    worksheet.write(columns[2] + str(start), 'Lp - ' + str(idx + 1), formatting)
+    worksheet.write(columns[2] + str(start), 'Lp - ' + decree['idx'], formatting)
     worksheet.write(columns[0] + str(start + 1), 'Nr dowodu', formatting)
     worksheet.merge_range(columns[1] + str(start + 1) + ':' + columns[2] + str(start + 1), decree['number'], formatting)
     worksheet.write(columns[0] + str(start + 2), 'Konto', formatting)
@@ -272,7 +272,7 @@ def get_currency_value(raw_number):
 
 
 def parse_table(table, month, year):
-    decree = {'symbol': None, 'date': None, 'input_date': None, 'number': None, 'rows': []}
+    decree = {'idx': None, 'symbol': None, 'date': None, 'input_date': None, 'number': None, 'rows': []}
     if int(table.attrib['cols']) == 5:
         parse_summary_table(table)
     if int(table.attrib['cols']) != 10:
@@ -281,6 +281,8 @@ def parse_table(table, month, year):
         if row.tag == 'row':
             if row[0][0].text == 'Lp.' or idx >= len(table) - 1:  # skip header and last row
                 continue
+            if decree['idx'] is None:
+                decree['idx'] = row[0][0].text
             if decree['date'] is None:
                 decree['date'] = year + '-' + month + '-' + row[1][0].text.split('.')[0]
             if decree['input_date'] is None or decree['input_date'] == '':
