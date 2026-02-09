@@ -302,7 +302,7 @@ def parse_table(table, month, year):
             if row[0][0].text == 'Lp.' or idx >= len(table) - 1:  # skip header and last row
                 continue
             if decree['date'] is None:
-                decree['date'] = year + '-' + month + '-' + row[lp_idx][0].text.split('.')[0]
+                decree['date'] = year + '-' + month + '-' + row[date_idx][0].text.split('.')[0]
             if decree['input_date'] is None or decree['input_date'] == '':
                 decree['input_date'] = row[input_date_idx][0].text.strip()
                 update_min_max_date(decree['input_date'])
